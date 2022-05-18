@@ -1,0 +1,183 @@
+version: 2
+sources:
+  - name: square
+    database: "{{var ('square_database', target.database)}}"
+    schema: "{{var ('square_schema', 'stripe')}}"
+
+    loader: fivetran
+    loaded_at_field: _fivetran_synced
+
+    freshness:
+      warn_after: { count: 72, period: hour }
+      error_after: { count: 168, period: hour }
+
+    tables:
+      - name: location
+        description: Represents one of a business' locations.
+        columns:
+          - name: id
+            description:  A short generated string of letters and numbers that uniquely identifies this location instance.
+          - name: name
+            description: The name of the location. This information appears in the Seller Dashboard as the nickname. A location name must be unique within a seller account.
+          - name: address
+            description: The physical address of the location.
+          - name: timezone
+            description: The IANA time zone identifier for the time zone of the location. For example, America/Los_Angeles.
+          - name: capabilites
+            description: Three-letter ISO currency code, in lowercase.
+          - name: status
+            description: The Square features that are enabled for the location.
+          - name: created_at
+            description: The time when the location was created, in RFC 3339 format.
+          - name: merchant_id
+            description: The ID of the merchant that owns the location.
+          - name: country
+            description: The country of the location, in the two-letter format of ISO 3166. For example, US or JP.
+          - name: language_code
+            description: The language associated with the location, in BCP 47 format.
+          - name: currency
+            description: The currency used for all transactions at this location, in ISO 4217 format. For example, the currency code for US dollars is USD.
+          - name: phone_number
+            description: The phone number of the location. For example, +1 855-700-6000.
+          - name: business_name
+            description: The name of the location's overall business. This name is present on receipts and other customer-facing branding.
+          - name: type
+            description: The type of the location.
+          - name: website_url
+            description: The website URL of the location. For example, https://squareup.com.
+
+      - name: catalog_object
+        description: The wrapper object for the catalog entries of a given object type.
+        columns:
+          - name: type
+            description:  The type of this object. Each object type has expected properties expressed in a structured format within its corresponding *_data field below.
+          - name: id
+            description:  An identifier to reference this object in the catalog. When a new CatalogObject is inserted, the client should set the id to a temporary identifier starting with a "#" character. Other objects being inserted or updated within the same request may use this identifier to refer to the new object.
+          - name: updated_at
+            description: TLast modification timestamp in RFC 3339 format, e.g., "2016-08-15T23:59:33.123Z" would indicate the UTC time (denoted by Z) of August 15, 2016 at 23:59:33 and 123 milliseconds.
+          - name: version
+            description: The version of the object. When updating an object, the version supplied must match the version in the database, otherwise the write will be rejected as conflicting.
+          - name: is_deleted
+            description: If true, the object has been deleted from the database. Must be false for new objects being inserted. When deleted, the updated_at field will equal the deletion time.
+          - name: catalog_v1_ids
+            description: The Connect v1 IDs for this object at each location where it is present, where they differ from the object's Connect V2 ID. The field will only be present for objects that have been created or modified by legacy APIs.
+          - name: present_at_all_locations
+            description: f true, this object is present at all locations (including future locations), except where specified in the absent_at_location_ids field. If false, this object is not present at any locations (including future locations), except where specified in the present_at_location_ids field. If not specified, defaults to true.
+          - name: present_at_location_ids
+            description: A list of locations where the object is present, even if present_at_all_locations is false. This can include locations that are deactivated.
+          - name: absent_at_location_ids
+            description: A list of locations where the object is not present, even if present_at_all_locations is true. This can include locations that are deactivated.
+
+      - name: customer
+        description: Represents a Square customer profile in the Customer Directory of a Square seller.
+        columns:
+          - name: id
+            description:  A unique Square-assigned ID for the customer profile.
+          - name: created_at
+            description: The timestamp when the customer profile was created, in RFC 3339 format.
+          - name: updated_at
+            description: The timestamp when the customer profile was last updated, in RFC 3339 format.
+          - name: given_name
+            description: The given name (that is, the first name) associated with the customer profile.
+          - name: family_name
+            description: The family name (that is, the last name) associated with the customer profile.
+          - name: nickname
+            description: A nickname for the customer profile.
+          - name: company_name
+            description: A business name associated with the customer profile.
+          - name: email_address
+            description: The email address associated with the customer profile.
+          - name: address
+            description: The physical address associated with the customer profile.
+          - name: phone_number
+            description: The phone number associated with the customer profile. A phone number can contain 9–16 digits, with an optional + prefix.
+          - name: birthday
+            description: The birthday associated with the customer profile, in RFC 3339 format. The year is optional. The timezone and time are not allowed. For example, 0000-09-21T00:00:00-00:00 represents a birthday on September 21 and 1998-09-21T00:00:00-00:00 represents a birthday on September 21, 1998.
+          - name: reference_id
+            description: An optional second ID used to associate the customer profile with an entity in another system.
+          - name: note
+            description: A custom note associated with the customer profile.
+          - name: preference_email_unsubscribed
+            description: Represents general customer preferences.
+          - name: creation_source
+            description: The method used to create the customer profile.
+
+      - name: inventory_count_history
+        description: Represents Square-estimated quantity of items in a particular state at a particular seller location based on the known history of physical counts and inventory adjustments.
+        columns:
+          - name: catalog_object_id
+            description:  The Square-generated ID of the CatalogObject being tracked.
+          - name: location_id
+            description: The Square-generated ID of the Location where the related quantity of items is being tracked.
+          - name: calculated_at
+            description: An RFC 3339-formatted timestamp that indicates when the most recent physical count or adjustment affecting the estimated count is received.
+          - name: catalog_object_type
+            description: The type of the CatalogObject being tracked.
+          - name: state
+            description: The current inventory state for the related quantity of items.
+          - name: quantity
+            description: The number of items affected by the estimated count as a decimal string. Can support up to 5 digits after the decimal point.
+
+      - name: order_line_item
+        description: Represents a line item in an order.
+        columns:
+          - name: uid
+            description:  A unique ID that identifies the line item only within this order.
+          - name: order_id
+            description: The order's unique ID.
+          - name: catalog_object_id
+            description: The CatalogItemVariation ID applied to this line item.
+          - name: name
+            description: The name of the line item.
+          - name: quantity
+            description: The quantity purchased, formatted as a decimal number. For example, "3".
+          - name: note
+            description: The note of the line item.
+          - name: variation_name
+            description: The name of the variation applied to this line item.
+          - name: base_price_money
+            description: The base price for a single unit of the line item.
+          - name: gross_sales_money
+            description: he amount of money made in gross sales for this line item. The amount is calculated as the sum of the variation's total price and each modifier's total price.
+          - name: total_tax_money
+            description: The total amount of tax money to collect for the line item.
+          - name: total_discount_money
+            description: The total amount of discount money to collect for the line item.
+          - name: total_money
+            description: The total amount of money to collect for this line item.
+
+      - name: order
+        description: Contains all information related to a single order to process with Square, including line items that specify the products to purchase.
+        columns:
+          - name: id
+            description: The order's unique ID.
+          - name: customer_id
+            description: The ID of the customer associated with the order.
+          - name: location_id
+            description: The ID of the seller location that this order is associated with.
+          - name: reference_id
+            description: A client-specified ID to associate an entity in another system with this order.
+          - name: order_source_name
+            description: The origination details of the order.
+          - name: created_at
+            description: The timestamp for when the order was created, in RFC 3339 format (for example, "2016-09-04T23:59:33.123Z").
+          - name: updated_at
+            description: The timestamp for when the order was last updated, in RFC 3339 format (for example, "2016-09-04T23:59:33.123Z").
+          - name: closed_at
+            description: The timestamp for when the order reached a terminal state, in RFC 3339 format (for example "2016-09-04T23:59:33.123Z").
+          - name: state
+            description: The current state of the order.
+          - name: return_amount
+            description: The rollup of the returned money amounts.
+          - name: net_amount
+            description: The net money amounts (sale money - return money).
+          - name: rounding_adjustment
+            description: A positive rounding adjustment to the total of the order. This adjustment is commonly used to apply cash rounding when the minimum unit of account is smaller than the lowest physical denomination of the currency.
+          - name: total_money
+            description: The total amount of money to collect for the order.
+          - name: total_tax_money
+            description: The total amount of tax money to collect for the order.
+          - name: total_discount_money
+            description: The total amount of discount money to collect for the order.
+          - name: total_service_charge_money
+            description: The total amount of money collected in service charges for the order.

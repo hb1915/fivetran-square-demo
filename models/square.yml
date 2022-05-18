@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: low_cover_stock
+    description: Each record denotes the cover in terms of unit stock for indivual products in locations
+    columns:
+    - name: catalog_object_id
+      description: An identifier to reference this object in the catalog.
+    - name: location_id
+      description: The Square-generated ID of the Location where the related quantity of items is being tracked.
+    - name: last_7_days_sales
+      description: The number of units sold of the item over the previous 7 days.
+    - name: stock_quantity
+      description: The number of items affected by the estimated count as a decimal string.
+    - name: weeks_of_cover
+      description: The number of weeks cover of stock of this item in this location.
